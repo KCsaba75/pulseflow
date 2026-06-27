@@ -89,6 +89,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Password',
                     labelStyle: TextStyle(color: Colors.white70),
+                    helperText: 'At least 6 characters',
+                    helperStyle: TextStyle(color: Colors.white54),
                   ),
                 ),
                 if (_error != null) ...[
