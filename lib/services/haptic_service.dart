@@ -24,6 +24,17 @@ extension PulsePresetBpm on PulsePreset {
         return 'Focus';
     }
   }
+
+  String get audioAsset {
+    switch (this) {
+      case PulsePreset.sleep:
+        return 'assets/audio/sleep_ambient.mp3';
+      case PulsePreset.calm:
+        return 'assets/audio/calm_ambient.mp3';
+      case PulsePreset.focus:
+        return 'assets/audio/focus_ambient.mp3';
+    }
+  }
 }
 
 class HapticService {
