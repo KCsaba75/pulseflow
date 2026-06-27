@@ -1,14 +1,26 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'config/app_config.dart';
 import 'models/session_timer.dart';
+import 'screens/login_screen.dart';
+import 'screens/paywall_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/audio_service.dart';
 import 'services/haptic_service.dart';
+import 'services/subscription_service.dart';
 import 'theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: AppConfig.supabaseUrl,
+    anonKey: AppConfig.supabaseAnonKey,
+  );
+
   runApp(const PulseFlowApp());
 }
 
@@ -29,7 +41,25 @@ class PulseFlowApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session == null) {
+          return const LoginScreen();
+        }
+        return const HomeScreen();
+      },
     );
   }
 }
@@ -44,11 +74,43 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _hapticService = HapticService();
   final _audioService = AudioService();
+  final _subscriptionService = SubscriptionService();
 
   PulsePreset _selectedPreset = PulsePreset.calm;
   SessionTimer _selectedTimer = SessionTimer.min20;
   bool _isPulsing = false;
+  bool _isPremium = false;
   Timer? _sessionTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSubscription();
+  }
+
+  Future<void> _initSubscription() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    await _subscriptionService.init(appUserId: userId);
+    final isPremium = await _subscriptionService.isPremium();
+    if (mounted) setState(() => _isPremium = isPremium);
+  }
+
+  Future<void> _openPaywall() async {
+    final purchased = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const PaywallScreen()),
+    );
+    if (purchased == true && mounted) {
+      setState(() => _isPremium = true);
+    }
+  }
+
+  void _selectTimer(SessionTimer timer) {
+    if (!_isPremium && timer != SessionTimer.min20) {
+      _openPaywall();
+      return;
+    }
+    setState(() => _selectedTimer = timer);
+  }
 
   void _toggle() {
     if (_isPulsing) {
@@ -63,10 +125,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _audioService.start(_selectedPreset);
     setState(() => _isPulsing = true);
 
-    final duration = _selectedTimer.duration;
-    if (duration != null) {
-      _sessionTimer = Timer(duration, _stop);
-    }
+    final cappedTimer = _isPremium ? _selectedTimer : SessionTimer.min20;
+    final duration = cappedTimer.duration ?? AppConfig.freeSessionLimit;
+    _sessionTimer = Timer(duration, _stop);
   }
 
   void _stop() {
@@ -142,9 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     isSelected: SessionTimer.values.map((t) => t == _selectedTimer).toList(),
                     onPressed: _isPulsing
                         ? null
-                        : (index) {
-                            setState(() => _selectedTimer = SessionTimer.values[index]);
-                          },
+                        : (index) => _selectTimer(SessionTimer.values[index]),
                     borderRadius: BorderRadius.circular(8),
                     selectedColor: PulseFlowColors.deepPurple,
                     fillColor: PulseFlowColors.paleGold,
@@ -152,11 +211,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: SessionTimer.values
                         .map((t) => Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              child: Text(t.label),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(t.label),
+                                  if (!_isPremium && t != SessionTimer.min20) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.lock, size: 14),
+                                  ],
+                                ],
+                              ),
                             ))
                         .toList(),
                   ),
-                  const SizedBox(height: 56),
+                  if (!_isPremium) ...[
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: _openPaywall,
+                      child: const Text(
+                        'Go Premium for unlimited sessions',
+                        style: TextStyle(color: PulseFlowColors.paleGold),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 40),
                   GestureDetector(
                     onTap: _toggle,
                     child: Container(
