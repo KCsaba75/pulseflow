@@ -47,10 +47,20 @@ class HapticService {
 
     _isRunning = true;
     final beatIntervalMs = (60000 / preset.bpm).round();
+    // Stopwatch anchors timing to session start so per-beat overhead never accumulates.
+    final stopwatch = Stopwatch()..start();
+    int beatCount = 0;
 
     while (_isRunning) {
       Vibration.vibrate(duration: 120);
-      await Future.delayed(Duration(milliseconds: beatIntervalMs));
+      beatCount++;
+
+      final nextBeatMs = beatCount * beatIntervalMs;
+      final remainingMs = nextBeatMs - stopwatch.elapsedMilliseconds;
+      if (remainingMs > 0) {
+        await Future.delayed(Duration(milliseconds: remainingMs));
+      }
+      // If remainingMs <= 0 the system was slow — fire the next beat immediately.
     }
   }
 
