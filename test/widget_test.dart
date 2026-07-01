@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,7 +17,7 @@ void main() {
   testWidgets('Unauthenticated user sees the login screen', (WidgetTester tester) async {
     await tester.pumpWidget(const PulseFlowApp());
 
-    expect(find.text('PulseFlow'), findsOneWidget);
+    expect(find.text('Pulsoma'), findsOneWidget);
     expect(find.text('Log in'), findsOneWidget);
   });
 }

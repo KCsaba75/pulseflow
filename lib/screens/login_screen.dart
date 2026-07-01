@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  'PulseFlow',
+                  'Pulsoma',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 32,

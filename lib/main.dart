@@ -30,7 +30,7 @@ class PulseFlowApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PulseFlow',
+      title: 'Pulsoma',
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: PulseFlowColors.deepPurple,
@@ -171,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'PulseFlow',
+                    'Pulsoma',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 32,
