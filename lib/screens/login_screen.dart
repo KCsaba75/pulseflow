@@ -19,6 +19,52 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _error;
 
+  Future<void> _showResetDialog() async {
+    final emailController = TextEditingController(text: _emailController.text.trim());
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF3D2B79),
+        title: const Text('Reset password', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: emailController,
+          keyboardType: TextInputType.emailAddress,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            labelStyle: TextStyle(color: Colors.white70),
+            enabledBorder: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final email = emailController.text.trim();
+              if (email.isEmpty) return;
+              Navigator.of(ctx).pop();
+              try {
+                await _authService.resetPassword(email: email);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Password reset email sent. Check your inbox.'),
+                  ));
+                }
+              } catch (e) {
+                if (mounted) setState(() => _error = e.toString());
+              }
+            },
+            child: const Text('Send', style: TextStyle(color: Color(0xFFC9A84C))),
+          ),
+        ],
+      ),
+    );
+    emailController.dispose();
+  }
+
   Future<void> _submit() async {
     setState(() {
       _isLoading = true;
@@ -111,6 +157,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                if (!_isRegister)
+                  TextButton(
+                    onPressed: _showResetDialog,
+                    child: const Text(
+                      'Forgot password?',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
                 TextButton(
                   onPressed: () => setState(() => _isRegister = !_isRegister),
                   child: Text(
