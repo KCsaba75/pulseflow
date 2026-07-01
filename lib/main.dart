@@ -10,6 +10,7 @@ import 'screens/paywall_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/audio_service.dart';
 import 'services/haptic_service.dart';
+import 'services/session_service.dart';
 import 'services/subscription_service.dart';
 import 'theme.dart';
 
@@ -75,12 +76,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final _hapticService = HapticService();
   final _audioService = AudioService();
   final _subscriptionService = SubscriptionService();
+  final _sessionService = SessionService();
 
   PulsePreset _selectedPreset = PulsePreset.calm;
   SessionTimer _selectedTimer = SessionTimer.min20;
   bool _isPulsing = false;
   bool _isPremium = false;
   Timer? _sessionTimer;
+  Stopwatch? _sessionStopwatch;
 
   @override
   void initState() {
@@ -123,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _start() {
     _hapticService.start(_selectedPreset);
     _audioService.start(_selectedPreset);
+    _sessionStopwatch = Stopwatch()..start();
     setState(() => _isPulsing = true);
 
     final cappedTimer = _isPremium ? _selectedTimer : SessionTimer.min20;
@@ -131,10 +135,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _stop() {
+    final elapsed = _sessionStopwatch?.elapsed.inSeconds ?? 0;
+    _sessionStopwatch?.stop();
+    _sessionStopwatch = null;
+
     _hapticService.stop();
     _audioService.stop();
     _sessionTimer?.cancel();
     _sessionTimer = null;
+
+    if (elapsed > 0) {
+      _sessionService.logSession(preset: _selectedPreset, durationSeconds: elapsed);
+    }
+
     if (mounted) {
       setState(() => _isPulsing = false);
     }
