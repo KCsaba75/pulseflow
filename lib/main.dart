@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/app_config.dart';
 import 'models/session_timer.dart';
 import 'screens/login_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/paywall_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/audio_service.dart';
@@ -47,11 +48,39 @@ class PulseFlowApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool? _onboardingSeen;
+
+  @override
+  void initState() {
+    super.initState();
+    hasSeenOnboarding().then((seen) {
+      if (mounted) setState(() => _onboardingSeen = seen);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_onboardingSeen == null) {
+      return const Scaffold(
+        backgroundColor: PulseFlowColors.deepPurple,
+        body: SizedBox.shrink(),
+      );
+    }
+
+    if (!_onboardingSeen!) {
+      return OnboardingScreen(
+        onDone: () => setState(() => _onboardingSeen = true),
+      );
+    }
+
     return StreamBuilder<AuthState>(
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
