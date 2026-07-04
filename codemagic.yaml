@@ -1,0 +1,51 @@
+workflows:
+  android-workflow:
+    name: Android Release APK
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      flutter: stable
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Get packages
+        script: flutter pub get
+      - name: Analyze
+        script: flutter analyze --no-fatal-infos
+      - name: Build release APK (split per ABI)
+        script: flutter build apk --release --split-per-abi
+    artifacts:
+      # arm64-v8a is the primary target; x86_64 included for emulator testing
+      - build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+      - build/app/outputs/flutter-apk/app-x86_64-release.apk
+
+  ios-workflow:
+    name: iOS Unsigned Build (simulator / Appetize verification)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Get packages
+        script: flutter pub get
+      - name: Build iOS unsigned
+        # --no-codesign: no Apple Developer account required.
+        # Goal: verify the app compiles and can be loaded on Appetize.io.
+        # FUTURE: when Apple Developer account is available, replace this step with:
+        #   flutter build ipa --release (+ add signing/certificates env vars)
+        # and add a publish.app_store_connect block for TestFlight distribution.
+        script: flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/iphoneos/Runner.app
