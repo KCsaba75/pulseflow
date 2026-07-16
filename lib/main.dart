@@ -35,11 +35,21 @@ class PulseFlowApp extends StatelessWidget {
       title: 'Pulsoma',
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: PulseFlowColors.deepPurple,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: PulseFlowColors.deepPurple,
+        scaffoldBackgroundColor: PulseFlowColors.background,
+        colorScheme: ColorScheme(
           brightness: Brightness.dark,
-          primary: PulseFlowColors.paleGold,
+          primary: PulseFlowColors.primary,
+          onPrimary: PulseFlowColors.background,
+          secondary: PulseFlowColors.secondary,
+          onSecondary: PulseFlowColors.background,
+          surface: PulseFlowColors.surface,
+          onSurface: PulseFlowColors.foreground,
+          error: const Color(0xFFCF6679),
+          onError: PulseFlowColors.background,
+        ),
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(color: PulseFlowColors.foreground),
+          bodySmall: TextStyle(color: PulseFlowColors.mutedForeground),
         ),
         useMaterial3: true,
       ),

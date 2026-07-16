@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF3D2B79),
+        backgroundColor: PulseFlowColors.surfaceDialog,
         title: const Text('Reset password', style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: emailController,
@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (mounted) setState(() => _error = e.toString());
               }
             },
-            child: const Text('Send', style: TextStyle(color: Color(0xFFC9A84C))),
+            child: const Text('Send', style: TextStyle(color: PulseFlowColors.primary)),
           ),
         ],
       ),
